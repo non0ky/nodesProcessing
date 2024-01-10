@@ -1,0 +1,408 @@
+PrintWriter nodeData;
+String[] nodeContent;
+String[] nodeString;
+String[] nodeConec;
+int[][] nodePos;
+int nodesCount;
+
+int buttonAct;
+int[][]xData = new int[6][2];
+
+char[] letras = {' '};
+String textSoli = "_";
+
+int delai;
+void setup() {
+  size(500, 700);
+  background(0);
+  stroke(255);
+  textAlign(CENTER, CENTER);
+  rectMode(CENTER);
+
+  nodeContent = loadStrings("nodes.txt");
+  // slider 1: x
+  xData[0][0] = 21;
+  xData[0][1] = 0;
+  // slider 2: y
+  xData[1][0] = 21;
+  xData[1][1] = 0;
+  // slider 3: conecciones
+  xData[2][0] = 120;
+  xData[2][1] = 0;
+  // slider elim
+  xData[3][0] = width / 2;
+  xData[3][1] = 0;
+   // slider 4: tmñ soli
+  xData[4][0] = 21;
+  xData[4][1] = 0;
+
+  loadData();
+}
+
+void loadData() {
+  nodeContent = loadStrings("nodes.txt");
+  nodesCount = nodeContent.length;
+  nodeString = new String[nodesCount];
+  nodeConec = new String[nodesCount];
+  nodePos = new int[nodesCount][2];
+
+  for (int i = 0; i < nodeContent.length; i++) {
+    String[] node = split(nodeContent[i], ',');
+    nodeString[i] = node[0];
+    nodePos[i][0] = int(node[1]);
+    nodePos[i][1] = int(node[2]);
+    nodeConec[i] = node[3];
+  }
+}
+
+void exportData() {
+  nodeData = createWriter("data/nodes.txt");
+  for (int i = 0; i < nodesCount; i++) {
+    if(nodePos[i][0] == 0){
+      nodePos[i][0] = xData[0][1];
+    }
+    
+    if(nodePos[i][1] == 0){
+      nodePos[i][1] = xData[1][1];
+    }
+    
+    String node = nodeString[i] + ',' + nodePos[i][0] + ',' + nodePos[i][1] + ',' + nodeConec[i];
+    nodeData.println(node);
+  }
+  nodeData.flush();
+  nodeData.close();
+}
+
+void draw() {
+  background(0);
+  if (frameCount % frameRate * 10 == 0) {
+    exportData();
+    println("e");
+  }
+
+  stroke(255);
+  for (int i = 0; i < nodeContent.length; i++) {
+    String[] conecs = split(nodeConec[i], ':');
+    int[] conecsNums = new int[conecs.length];
+    for (int j = 0; j < conecsNums.length; j++) {
+      conecsNums[j] = int(conecs[j]);
+    }
+    for (int j = 0; j < conecsNums.length; j++) {
+      if (conecsNums[j] < nodeContent.length) {
+        line(nodePos[i][0], nodePos[i][1], nodePos[conecsNums[j]][0], nodePos[conecsNums[j]][1]);
+      }
+    }
+  }
+
+  for (int i = 0; i < nodeContent.length; i++) {
+    fill(0);
+    rect(nodePos[i][0], nodePos[i][1], textWidth(nodeString[i]) + 8, 20);
+    fill(255);
+    text(nodeString[i], nodePos[i][0], nodePos[i][1]);
+  }
+
+  panel();
+}
+
+void panel() {
+  rectMode(CORNER);
+  strokeWeight(2);
+  nodesCount = nodeContent.length;
+  button(1, 500, 0, 40);
+  button(43, 500, 1, 40);
+  button(86, 500, 2, 40);
+  noFill();
+  stroke(255);
+  rect(0, 500, 500 -2, 200 -1);
+  line(0, 540, 500, 540);
+
+  if (buttonAct == 0) {
+    actA();
+    fill(255);
+    textAlign(RIGHT, CENTER);
+    text("agregar nodo", 480, 520);
+    textAlign(CENTER, CENTER);
+  } else if (buttonAct == 1) {
+    actB();
+    fill(255);
+    textAlign(RIGHT, CENTER);
+    text("eliminar nodo", 480, 520);
+    textAlign(CENTER, CENTER);
+  } else {
+    actC();
+    fill(255);
+    textAlign(RIGHT, CENTER);
+    text("solicitar texto", 480, 520);
+    textAlign(CENTER, CENTER);
+  }
+
+  strokeWeight(1);
+  rectMode(CENTER);
+}
+
+void button(int x, int y, int buttonNum, int tmñ) {
+  if (buttonNum == buttonAct) {
+    strokeWeight(2);
+    stroke(255);
+    fill(0);
+  } else {
+    fill(0);
+    stroke(0);
+    if (mouseX >= x && mouseX <= x + tmñ && mouseY >= y && mouseY <= y + tmñ) {
+      stroke(0);
+      fill(255, 180);
+      if (mousePressed) {
+        buttonAct = buttonNum;
+      }
+    }
+  }
+  rect(x, y, tmñ, tmñ);
+
+  fill(255);
+  text(buttonNum + 1, x + tmñ / 2, y + tmñ / 2);
+}
+
+void actA() {
+  slider(20, 560, 70, 0, 10, "x", -8, 508);
+  slider(20, 590, 70, 1, 10, "y", -8, 508);
+  slider(120, 560, 70, 2, 10, "co.", 0, nodesCount);
+
+  String nodeString = new String(letras);
+  text('"' + nodeString + '"', 330, 580);
+
+  button(320, 600, 20, "enviar");
+
+  noStroke();
+  if (frameCount % 5 == 0) {
+    fill(0);
+  } else {
+    fill(#DE3148);
+  }
+  rect(xData[0][1], xData[1][1], 2, 2);
+}
+
+void actB() {
+  slider( width / 2 - 100, 600, 200, 3, 15, "nodo selec.", 0, nodesCount);
+  noFill();
+  if (frameCount % 5 == 0) {
+    stroke(0);
+  } else {
+    stroke(#DE3148);
+  }
+  rectMode(CENTER);
+  rect(nodePos[xData[3][1]][0], nodePos[xData[3][1]][1], textWidth(nodeString[xData[3][1]]) + 8, 20);
+  rectMode(CORNER);
+
+  button(width/ 2 + 100 + 30, 600, 20, "nodo elim.");
+}
+
+void actC() {
+  slider(20, 560, 130, 4, 15, "tamñ. solicitud", 1, 100);
+  button(20, 600, 20, "pedir");
+  stroke(255);
+  line(170, 540, 170, 700);
+  fill(255);
+  textAlign(LEFT, TOP);
+  text(textSoli, 180, 560, 300, 200);
+  textAlign(CENTER, CENTER);
+}
+
+void slider(int x, int y, int tmñ, int x2, int diam, String plb, int numMin, int numMax) {
+  stroke(255);
+  line(x, y + diam * 1.5, x + tmñ, y + diam * 1.5);
+  if (mouseX > x && mouseX < x + tmñ && mouseY > y  + diam * 1.5 - 2 && mouseY < y  + diam * 1.5 + 2) {
+    if (mousePressed) {
+      xData[x2][0] = mouseX;
+      if (xData[x2][0] < x) {
+        xData[x2][0] = x;
+      }
+      if (xData[x2][0] > x + tmñ) {
+        xData[x2][0] = x + tmñ;
+      }
+    }
+  }
+
+  stroke(0);
+  fill(255);
+  ellipse(xData[x2][0], y + diam * 1.5, diam, diam);
+
+  int xResul = int(map(xData[x2][0], x, x + tmñ, numMin, numMax));
+  if (xResul < 0) {
+    xData[x2][1] = 0;
+  } else {
+    xData[x2][1] = xResul;
+  }
+  textAlign(LEFT, CENTER);
+  text(plb + ": " + xResul, x - 10, y);
+  textAlign(CENTER, CENTER);
+}
+
+void button(int x, int y, int tmñ, String txt) {
+  delai--;
+  text(txt, x + + tmñ / 2, y);
+  if (mouseX > x && mouseX < x + tmñ && mouseY > y + 15 && mouseY < y + tmñ + 15) {
+    if (delai < 0) {
+      if (mousePressed) {
+        if (buttonAct == 0) {
+          String nodeString = new String(letras);
+          sumarNode(nodeString, xData[0][1], xData[1][1]);
+          delai = 15;
+        } else if (buttonAct == 1) {
+          restarNode(xData[3][1]);
+        } else {
+          int nodoIni = int(random(nodeContent.length));
+          crearText(nodoIni, xData[4][1]);
+        }
+        delai = 15;
+      }
+    }
+    fill(255);
+    stroke(255, 100);
+  } else {
+    fill(0);
+    stroke(255);
+  }
+  rect(x, y + 15, tmñ, tmñ);
+}
+
+void crearText(int nodo, int saltos){
+  textSoli = "";
+  for(int i = 0; i < saltos; i++){
+    textSoli += nodeString[nodo] + " ";
+    String[] conecs = split(nodeConec[nodo], ':');
+    println("----------");
+    println(nodo);
+    printArray(conecs);
+    int sigNodo = int(conecs[int(random(conecs.length))]);
+    println(sigNodo);
+    nodo = sigNodo;
+    println("----------");
+  }
+}
+
+void restarNode(int index) {
+  String[] menosNode = new String[nodeContent.length - 1];
+  for (int i = 0; i < index; i++) {
+    menosNode[i] = nodeContent[i];
+  }
+
+  for (int i = index; i < menosNode.length; i++) {
+    menosNode[i] = nodeContent[i + 1];
+  }
+  nodeContent = menosNode;
+
+  String[] menosString = new String[nodeContent.length];
+  for (int i = 0; i < index; i++) {
+    menosString[i] = nodeString[i];
+  }
+  for (int i = index; i < menosNode.length; i++) {
+    menosString[i] = nodeString[i + 1];
+  }
+  nodeString = menosString;
+
+  int[][] menosPos = new int[nodePos.length][2];
+  for (int i = 0; i < index; i++) {
+    menosPos[i][0] = int(nodePos[i][0]);
+    menosPos[i][1] = int(nodePos[i][1]);
+  }
+  for (int i = index; i < menosNode.length; i++) {
+    menosPos[i][0] = int(nodePos[i + 1][0]);
+    menosPos[i][1] = int(nodePos[i + 1][1]);
+  }
+  nodePos = menosPos;
+
+  String[] menosConec = new String[nodeContent.length];
+  for (int i = 0; i < index; i++) {
+    menosConec[i] = nodeConec[i];
+  }
+  for (int i = index; i < menosNode.length; i++) {
+    menosConec[i] = nodeConec[i + 1];
+  }
+  nodeConec = menosConec;
+}
+
+void sumarNode(String name, int x, int y) {
+  nodesCount++;
+  String listConec = "";
+  if (xData[2][1] > 0) {
+    int[] nodesSelec = new int[xData[2][1]];
+    for (int i = 0; i < nodesSelec.length; i++) {
+      nodesSelec[i] = int(random(nodeContent.length));
+      nodeConec[nodesSelec[i]] += ":" + nodesCount;
+      listConec += nodesSelec[i] + ":";
+    }
+
+    char[] reOrg = listConec.toCharArray();
+    char[] reOrgOk = new char[reOrg.length - 1];
+    for (int i = 0; i < reOrgOk.length; i++) {
+      reOrgOk[i] = reOrg[i];
+    }
+    
+    listConec = new String(reOrgOk);
+  } else {
+    listConec = "1";
+  }
+  
+  String[] sumar = new String[nodeContent.length + 1];
+  for (int i = 0; i < nodeContent.length; i++) {
+    sumar[i] = nodeContent[i];
+  }
+  sumar[nodeContent.length] = name + ',' + x + ',' + y + ',' + listConec;
+  nodeContent = sumar;
+
+  String[] nodeNew = split(nodeContent[nodeContent.length - 1], ',');
+
+  String[] stringNew = new String[nodeString.length + 1];
+  for (int i = 0; i < nodeString.length; i++) {
+    stringNew[i] = nodeString[i];
+  }
+  stringNew[nodeString.length] = nodeNew[0];
+  nodeString = stringNew;
+
+  int[][] posNew = new int[nodePos.length + 1][2];
+  for (int i = 0; i < nodePos.length; i++) {
+    posNew[i][0] = nodePos[i][0];
+    posNew[i][1] = nodePos[i][1];
+  }
+  posNew[nodePos.length][0] = int(nodeNew[1]);
+  posNew[nodePos.length][1] = int(nodeNew[2]);
+  nodePos = posNew;
+
+  String[] conecNew = new String[nodeConec.length + 1];
+  for (int i = 0; i < nodeConec.length; i++) {
+    conecNew[i] = nodeConec[i];
+  }
+  conecNew[nodeConec.length] = nodeNew[3];
+  nodeConec = conecNew;
+  
+  exportData();
+}
+
+void keyTyped() {
+  if (key == BACKSPACE) {
+    restar();
+  } else if (key == TAB) {
+    letras = new char[] {' '};
+  } else {
+    sumar(key);
+  }
+}
+
+void restar() {
+  if (letras.length > 0) {
+    char[] nuevoArreglo = new char[letras.length - 1];
+    for (int i = 0; i < letras.length - 1; i++) {
+      nuevoArreglo[i] = letras[i];
+    }
+    letras = nuevoArreglo;
+  }
+}
+
+void sumar(char nuevoElemento) {
+  char[] nuevoArreglo = new char[letras.length + 1];
+  for (int i = 0; i < letras.length; i++) {
+    nuevoArreglo[i] = letras[i];
+  }
+  nuevoArreglo[letras.length] = nuevoElemento;
+  letras = nuevoArreglo;
+}
